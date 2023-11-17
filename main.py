@@ -38,14 +38,18 @@ original_data = dataset_file["H"]
 data = transpose(original_data, (1, 2, 0))
 data = reshape(data, (25, 100, 200))
 
-ifft = [abs(real(fftp.ifft(arr))) for arr in data[:, :]]
+ifft_amplitude = [abs(fftp.ifft(arr)) for arr in data[:, :]]
+power = [sum(amplitude*amplitude)/200 for amplitude in ifft_amplitude[:,:]]
+#Dit is niet juist Python; maar mn doel hierna is dat power een 25x100x1 matrix is
 
-plt.plot(ifft[0][0])
-plt.plot(ifft[0][1])
-plt.plot(ifft[0][3])
-plt.plot(ifft[1][0])
-plt.plot(ifft[1][1])
-plt.plot(ifft[1][3])
-plt.show()
+print(ifft_amplitude[0][0][0])
+
+# plt.plot(power[0][0])
+# plt.plot(power[0][1])
+# plt.plot(power[0][3])
+# plt.plot(power[1][0])
+# plt.plot(power[1][1])
+# plt.plot(power[1][3])
+# plt.show()
 
 main()
