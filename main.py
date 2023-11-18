@@ -24,7 +24,7 @@ def channel2APDP(original_data):
 
     return avg_power
 
-    # Uit de practica weet je nog dat de afstand tussen de opeenvolgende tijdssamples (∆T = 1/fS )
+    # Uit de practica weet je nog dat de afstand tussen de opeenvolgende tijdssamples (∆T = 1/fS )  --> Tot 3Ghz dus Fs=6Ghz?
     # bepaalde wat de range van de samples in het frequentiedomein was (0 tot fS ) en hun
     # onderlinge afstand of frequentieresolutie (fS /N). Maak de analogie en denk na over de
     # range van de nu bekomen samples in het tijdsdomein (of hier delaydomein), welke delay
