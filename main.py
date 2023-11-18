@@ -8,11 +8,30 @@ import scipy.io as sio
 
 
 # -- Bepalen reistijden van paden --
-def channel2APDP(data):
+def channel2APDP(original_data):
     """
     APDP: Averaged Power Delay Profile
+    Data in form of: freq_tonen x positions x measurements
     """
     print("channel2APDP")
+
+    data = transpose(original_data, (1, 2, 0))
+    data = reshape(data, (25, 100, 200))
+
+    ifft_amplitude = [abs(fftp.ifft(arr)) for arr in data[:, :]]        #Hier moeten we ook nog eens een venster rond proberen zetten
+    power = [amplitude*amplitude for amplitude in ifft_amplitude[:][:]]
+    avg_power = [mean(power_values) for power_values in power]          #len25 array:)
+
+    return avg_power
+
+    # Uit de practica weet je nog dat de afstand tussen de opeenvolgende tijdssamples (∆T = 1/fS )
+    # bepaalde wat de range van de samples in het frequentiedomein was (0 tot fS ) en hun
+    # onderlinge afstand of frequentieresolutie (fS /N). Maak de analogie en denk na over de
+    # range van de nu bekomen samples in het tijdsdomein (of hier delaydomein), welke delay
+    # stelt elk sample voor (wat is de tijdsresolutie) en hoe linkt dit aan de afstand tussen de
+    # opeenvolgende frequentietonen en aan de bandbreedte van het signaal?
+
+
 
 
 def calculate_delays():
@@ -31,25 +50,15 @@ def calculate_location(tau0: number, tau1=number) -> (number, number):
 def main():
     print("main")
 
+    dataset_file = sio.loadmat("./Dataset_1.mat")
+    original_data = dataset_file["H"]
 
-dataset_file = sio.loadmat("./Dataset_1.mat")
-original_data = dataset_file["H"]
+    apdp = channel2APDP(original_data)
 
-data = transpose(original_data, (1, 2, 0))
-data = reshape(data, (25, 100, 200))
+    # print(apdp)
 
-ifft_amplitude = [abs(fftp.ifft(arr)) for arr in data[:, :]]
-power = [sum(amplitude*amplitude)/200 for amplitude in ifft_amplitude[:,:]]
-#Dit is niet juist Python; maar mn doel hierna is dat power een 25x100x1 matrix is
+    plt.plot(apdp)
+    plt.show()
 
-print(ifft_amplitude[0][0][0])
-
-# plt.plot(power[0][0])
-# plt.plot(power[0][1])
-# plt.plot(power[0][3])
-# plt.plot(power[1][0])
-# plt.plot(power[1][1])
-# plt.plot(power[1][3])
-# plt.show()
 
 main()
