@@ -14,12 +14,12 @@ def channel2APDP(original_data: ndarray):
     APDP: Averaged Power Delay Profile
     Data in form of: freq_tonen x positions x measurements
     """
-    print("channel2APDP")
-
     data = transpose(original_data, (1, 2, 0))
     data = reshape(data, (25, 100, 200))
 
-    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]        #Hier moeten we ook nog eens een venster rond proberen zetten
+    ifft_amplitude = [
+        [abs(fftp.ifft(meas)) for meas in arr] for arr in data
+    ]  # Hier moeten we ook nog eens een venster rond proberen zetten
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 200, 100))
@@ -32,10 +32,7 @@ def channel2APDP(original_data: ndarray):
         for positions in ifft_amplitude
     ]
 
-    avg_power = [[mean(power_values) for power_values in pos] for pos in power]          #len25 array:)
-
-    plt.plot(avg_power[4])
-    plt.show()
+    avg_power = [[mean(power_values) for power_values in pos] for pos in power]
 
     return avg_power
 
@@ -47,10 +44,16 @@ def channel2APDP(original_data: ndarray):
     # opeenvolgende frequentietonen en aan de bandbreedte van het signaal?
 
 
-
-
-def calculate_delays():
-    print("calculate_delays")
+def calculate_delays(APDPs: ndarray):
+    """
+    Returns list of two largest local maxima
+    """
+    delays = list()
+    for APDP in APDPs:
+        peaks, _ = sig.find_peaks(APDP, height=0)
+        max2peaks = sorted(peaks, key=lambda x: APDP[x], reverse=True)[:2]
+        delays.append(max2peaks)
+    return delays
 
 
 # -- Locatiebepaling --
@@ -67,11 +70,21 @@ def main():
     data: ndarray = dataset_file["H"]
     print(type(data))
 
-    apdp = channel2APDP(data)
+    apdps = channel2APDP(data)
+    delays = calculate_delays(apdps)
 
-    print(apdp)
+    apdp = array(apdps[0])
+    delay = delays[0]
 
+    # Plot the impulse response and mark the peaks
+    plt.figure(figsize=(8, 6))
     plt.plot(apdp)
+    plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
+    plt.xlabel("Index")
+    plt.ylabel("Amplitude")
+    plt.title("Impulse Response with Peaks")
+    plt.legend()
+    plt.grid(True)
     plt.show()
 
 
