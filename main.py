@@ -1,14 +1,15 @@
 from math import *
-from numpy import *
-from scipy import *
+
 import matplotlib.pyplot as plt
-import scipy.signal as sig
 import scipy.fftpack as fftp
 import scipy.io as sio
+import scipy.signal as sig
+from numpy import *
+from scipy import *
 
 
 # -- Bepalen reistijden van paden --
-def channel2APDP(original_data):
+def channel2APDP(original_data: ndarray):
     """
     APDP: Averaged Power Delay Profile
     Data in form of: freq_tonen x positions x measurements
@@ -44,7 +45,6 @@ def channel2APDP(original_data):
     # range van de nu bekomen samples in het tijdsdomein (of hier delaydomein), welke delay
     # stelt elk sample voor (wat is de tijdsresolutie) en hoe linkt dit aan de afstand tussen de
     # opeenvolgende frequentietonen en aan de bandbreedte van het signaal?
-    #van 10Mhz gedoe terugwerken naar Ts ; omgekeerde van in labos
 
 
 
@@ -54,21 +54,20 @@ def calculate_delays():
 
 
 # -- Locatiebepaling --
-def calculate_location(tau0: number, tau1=number) -> (number, number):
+def calculate_location(tau0: number, tau1=number):
     """
     tau0: reistijd direct propagatiepad
     tau1: reistijd gereflecteerde pad
     """
-    print("calculate_location")
+    return (0.0, 0.0)
 
 
 def main():
-    print("main")
-
     dataset_file = sio.loadmat("./Dataset_1.mat")
-    original_data = dataset_file["H"]
+    data: ndarray = dataset_file["H"]
+    print(type(data))
 
-    apdp = channel2APDP(original_data)
+    apdp = channel2APDP(data)
 
     print(apdp)
 
