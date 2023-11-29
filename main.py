@@ -44,6 +44,10 @@ def channel2APDP(original_data: ndarray):
     # opeenvolgende frequentietonen en aan de bandbreedte van het signaal?
 
 
+
+    # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 10e-7s/200 = 5e-10 s
+
+
 def calculate_delays(APDPs: ndarray):
     """
     Returns list of two largest local maxima
@@ -53,6 +57,10 @@ def calculate_delays(APDPs: ndarray):
         peaks, _ = sig.find_peaks(APDP, height=0)
         max2peaks = sorted(peaks, key=lambda x: APDP[x], reverse=True)[:2]
         delays.append(max2peaks)
+    
+    #Willen we hier niet al rechtstreeks de 2 taus teruggeven?
+    # Index tau1 * fS   en  index tau2 * fS (fS=5e-10s)
+
     return delays
 
 
@@ -62,6 +70,7 @@ def calculate_location(tau0: number, tau1=number):
     tau0: reistijd direct propagatiepad
     tau1: reistijd gereflecteerde pad
     """
+    
     return (0.0, 0.0)
 
 
