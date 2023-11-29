@@ -45,12 +45,12 @@ def channel2APDP(original_data: ndarray):
 
 
 
-    # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 10e-7s/200 = 5e-10 s
+    
 
 
 def calculate_delays(APDPs: ndarray):
     """
-    Returns list of two largest local maxima
+    Returns list of Tau1 and Tau2 Pairs
     """
     delays = list()
     for APDP in APDPs:
@@ -58,8 +58,9 @@ def calculate_delays(APDPs: ndarray):
         max2peaks = sorted(peaks, key=lambda x: APDP[x], reverse=True)[:2]
         delays.append(max2peaks)
     
-    #Willen we hier niet al rechtstreeks de 2 taus teruggeven?
-    # Index tau1 * fS   en  index tau2 * fS (fS=5e-10s)
+    # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 10e-7s/200 = 5e-10 s
+    fS = 5e-10
+    delays = [[indexen *fS for indexen in peaks] for peaks in delays] #Tau1 en Tau2 in seconden
 
     return delays
 
@@ -70,6 +71,11 @@ def calculate_location(tau0: number, tau1=number):
     tau0: reistijd direct propagatiepad
     tau1: reistijd gereflecteerde pad
     """
+
+    afgelegdeweg1 = tau0 * 299792458
+    afgelegdeweg2 = tau1 * 299792458
+
+    print(afgelegdeweg1, afgelegdeweg2)
     
     return (0.0, 0.0)
 
@@ -82,19 +88,22 @@ def main():
     apdps = channel2APDP(data)
     delays = calculate_delays(apdps)
 
-    apdp = array(apdps[0])
-    delay = delays[0]
+    calculate_location(delays[0][0],delays[0][1])  #YEEY; dit geeft realistische waarden:) Nu natuurlijk nog heel da goniometriegedoe!
 
-    # Plot the impulse response and mark the peaks
-    plt.figure(figsize=(8, 6))
-    plt.plot(apdp)
-    plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
-    plt.xlabel("Index")
-    plt.ylabel("Amplitude")
-    plt.title("Impulse Response with Peaks")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # apdp = array(apdps[0])
+    # delay = delays[0]
+    # print(delay)
+
+    # # Plot the impulse response and mark the peaks
+    # plt.figure(figsize=(8, 6))
+    # plt.plot(apdp)
+    # plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
+    # plt.xlabel("Index")
+    # plt.ylabel("Amplitude")
+    # plt.title("Impulse Response with Peaks")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 
 
 main()
