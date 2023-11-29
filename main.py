@@ -12,17 +12,18 @@ from scipy import *
 def channel2APDP(original_data: ndarray):
     """
     APDP: Averaged Power Delay Profile
-    Data in form of: freq_tonen x positions x measurements
+    Data in form of: freq_tonen(200) x positions(25) x measurements(100)
     """
     data = transpose(original_data, (1, 2, 0))
     data = reshape(data, (25, 100, 200))
+    # Data in nieuwe vorm: positions(25) x measurements(100) x freq_tonen(200)
 
-    ifft_amplitude = [
-        [abs(fftp.ifft(meas)) for meas in arr] for arr in data
-    ]  # Hier moeten we ook nog eens een venster rond proberen zetten
+    # TODO venster rond zetten
+    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 200, 100))
+    # Data in nieuwe vorm: positions(25) x freq_tonen(200) x measurements(100)
 
     power = [
         [
@@ -44,10 +45,6 @@ def channel2APDP(original_data: ndarray):
     # opeenvolgende frequentietonen en aan de bandbreedte van het signaal?
 
 
-
-    
-
-
 def calculate_delays(APDPs: ndarray):
     """
     Returns list of Tau1 and Tau2 Pairs
@@ -57,10 +54,12 @@ def calculate_delays(APDPs: ndarray):
         peaks, _ = sig.find_peaks(APDP, height=0)
         max2peaks = sorted(peaks, key=lambda x: APDP[x], reverse=True)[:2]
         delays.append(max2peaks)
-    
+
     # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 10e-7s/200 = 5e-10 s
     fS = 5e-10
-    delays = [[indexen *fS for indexen in peaks] for peaks in delays] #Tau1 en Tau2 in seconden
+    delays = [
+        [indexen * fS for indexen in peaks] for peaks in delays
+    ]  # Tau1 en Tau2 in seconden
 
     return delays
 
@@ -76,7 +75,7 @@ def calculate_location(tau0: number, tau1=number):
     afgelegdeweg2 = tau1 * 299792458
 
     print(afgelegdeweg1, afgelegdeweg2)
-    
+
     return (0.0, 0.0)
 
 
@@ -88,7 +87,9 @@ def main():
     apdps = channel2APDP(data)
     delays = calculate_delays(apdps)
 
-    calculate_location(delays[0][0],delays[0][1])  #YEEY; dit geeft realistische waarden:) Nu natuurlijk nog heel da goniometriegedoe!
+    calculate_location(
+        delays[0][0], delays[0][1]
+    )  # YEEY; dit geeft realistische waarden:) Nu natuurlijk nog heel da goniometriegedoe!
 
     # apdp = array(apdps[0])
     # delay = delays[0]
