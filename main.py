@@ -4,8 +4,26 @@ import matplotlib.pyplot as plt
 import scipy.fftpack as fftp
 import scipy.io as sio
 import scipy.signal as sig
+import scipy.constants as consts
 from numpy import *
 from scipy import *
+
+
+# -- Tests --
+def plot_apdp_with_delay(apdp, delay1):
+    """
+    Plots the impulse response and marks the peaks
+    """
+    delay = [int(delay // 5e-10) for delay in delay1]
+    plt.figure(figsize=(8, 6))
+    plt.plot(apdp)
+    plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
+    plt.xlabel("Index")
+    plt.ylabel("Amplitude")
+    plt.title("Impulse Response with Peaks")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 # -- Bepalen reistijden van paden --
@@ -65,14 +83,14 @@ def calculate_delays(APDPs: ndarray):
 
 
 # -- Locatiebepaling --
-def calculate_location(tau0: number, tau1=number):
+def calculate_location(tau0: number, tau1: number):
     """
     tau0: reistijd direct propagatiepad
     tau1: reistijd gereflecteerde pad
     """
 
-    afgelegdeweg1 = tau0 * 299792458
-    afgelegdeweg2 = tau1 * 299792458
+    afgelegdeweg1 = tau0 * consts.speed_of_light
+    afgelegdeweg2 = tau1 * consts.speed_of_light
 
     print(afgelegdeweg1, afgelegdeweg2)
 
@@ -82,29 +100,14 @@ def calculate_location(tau0: number, tau1=number):
 def main():
     dataset_file = sio.loadmat("./Dataset_1.mat")
     data: ndarray = dataset_file["H"]
-    print(type(data))
 
     apdps = channel2APDP(data)
     delays = calculate_delays(apdps)
 
-    calculate_location(
-        delays[0][0], delays[0][1]
-    )  # YEEY; dit geeft realistische waarden:) Nu natuurlijk nog heel da goniometriegedoe!
+    # YEEY; dit geeft realistische waarden:) Nu natuurlijk nog heel da goniometriegedoe!
+    calculate_location(delays[0][0], delays[0][1])
 
-    # apdp = array(apdps[0])
-    # delay = delays[0]
-    # print(delay)
-
-    # # Plot the impulse response and mark the peaks
-    # plt.figure(figsize=(8, 6))
-    # plt.plot(apdp)
-    # plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
-    # plt.xlabel("Index")
-    # plt.ylabel("Amplitude")
-    # plt.title("Impulse Response with Peaks")
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
+    plot_apdp_with_delay(array(apdps[0]), delays[0])
 
 
 main()
