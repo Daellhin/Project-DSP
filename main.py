@@ -88,9 +88,10 @@ def calculate_location(tau0: float64, tau1: float64):
 
     Coördinaten basisstation: (xB, yB) = (0m, 1m)
     """
+    print(tau0 < tau1, f"{tau0}<{tau1}")
     receiver_position = (0, 1)
 
-    print(tau0 < tau1)
+
 
     distance_direct = tau0 * consts.speed_of_light
     distance_reflected = tau1 * consts.speed_of_light
