@@ -67,34 +67,47 @@ def calculate_delays(APDPs: ndarray):
     """
     Returns list of Tau1 and Tau2 Pairs
     """
-    delays = list()
-    for APDP in APDPs:
-        peaks, _ = sig.find_peaks(APDP, height=0)
-        max2peaks = sorted(peaks, key=lambda x: APDP[x], reverse=True)[:2]
-        delays.append(max2peaks)
-
     # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 10e-7s/200 = 5e-10 s
     fS = 5e-10
-    delays = [
-        [indexen * fS for indexen in peaks] for peaks in delays
-    ]  # Tau1 en Tau2 in seconden
+
+    delays = list()
+    for APDP in APDPs:
+        peakIndexes, _ = sig.find_peaks(APDP, height=0)
+        max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
+        max2Delays = [peakIndex * fS for peakIndex in max2peakIndexes]
+        delays.append(max2Delays)
 
     return delays
 
 
 # -- Locatiebepaling --
-def calculate_location(tau0: number, tau1: number):
+def calculate_location(tau0: float64, tau1: float64):
     """
     tau0: reistijd direct propagatiepad
     tau1: reistijd gereflecteerde pad
+
+    Coördinaten basisstation: (xB, yB) = (0m, 1m)
     """
+    receiver_position = (0, 1)
 
-    afgelegdeweg1 = tau0 * consts.speed_of_light
-    afgelegdeweg2 = tau1 * consts.speed_of_light
+    print(tau0 < tau1)
 
-    print(afgelegdeweg1, afgelegdeweg2)
+    distance_direct = tau0 * consts.speed_of_light
+    distance_reflected = tau1 * consts.speed_of_light
 
-    return (0.0, 0.0)
+    # The sending point is on the circle centered at the receiver with radius equal to the direct path distance
+    # The reflected point is on the circle centered at the origin with radius equal to the reflected path distance
+    # The sending point is the intersection of these two circles
+
+    # Solve the system of equations to find the intersection points
+    d = distance_direct
+    r = distance_reflected
+    y = receiver_position[1]
+
+    x = (d**2 - r**2 + y**2) / (2 * y)
+    y = sqrt(abs(d**2 - x**2))
+
+    return (x, y)
 
 
 def main():
@@ -103,11 +116,14 @@ def main():
 
     apdps = channel2APDP(data)
     delays = calculate_delays(apdps)
+    locations = [
+        calculate_location(delayTuple[0], delayTuple[1]) for delayTuple in delays
+    ]
+    x_values, y_values = zip(*locations)
+    plt.scatter(x_values, y_values)
+    plt.show()
 
-    # YEEY; dit geeft realistische waarden:) Nu natuurlijk nog heel da goniometriegedoe!
-    calculate_location(delays[0][0], delays[0][1])
-
-    plot_apdp_with_delay(array(apdps[0]), delays[0])
+    # plot_apdp_with_delay(array(apdps[0]), delays[0])
 
 
 main()
