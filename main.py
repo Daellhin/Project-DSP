@@ -21,9 +21,9 @@ def plot_apdp_with_delay(apdp, delay1):
     plt.xlabel("Index")
     plt.ylabel("Amplitude")
     plt.title("Impulse Response with Peaks")
+    plt.yscale('log')
     plt.legend()
     plt.grid(True)
-    plt.show()
 
 
 # -- Bepalen reistijden van paden --
@@ -72,7 +72,7 @@ def calculate_delays(APDPs: ndarray):
 
     delays = list()
     for APDP in APDPs:
-        peakIndexes, _ = sig.find_peaks(APDP, height=0)
+        peakIndexes, _ = sig.find_peaks(APDP)
         max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
         max2Delays = [peakIndex * fS for peakIndex in max2peakIndexes]
         delays.append(max2Delays)
@@ -81,33 +81,21 @@ def calculate_delays(APDPs: ndarray):
 
 
 # -- Locatiebepaling --
-def calculate_location(tau0: float64, tau1: float64):
+def calculate_location(tau0: float, tau1: float):
     """
     tau0: reistijd direct propagatiepad
     tau1: reistijd gereflecteerde pad
 
     Coördinaten basisstation: (xB, yB) = (0m, 1m)
     """
-    print(tau0 < tau1, f"{tau0}<{tau1}")
-    receiver_position = (0, 1)
+    # print(tau0 < tau1, f"{tau0}<{tau1}")
 
+    distance0 = tau0 * consts.speed_of_light
+    distance1 = tau1 * consts.speed_of_light
 
-
-    distance_direct = tau0 * consts.speed_of_light
-    distance_reflected = tau1 * consts.speed_of_light
-
-    # The sending point is on the circle centered at the receiver with radius equal to the direct path distance
-    # The reflected point is on the circle centered at the origin with radius equal to the reflected path distance
-    # The sending point is the intersection of these two circles
-
-    # Solve the system of equations to find the intersection points
-    d = distance_direct
-    r = distance_reflected
-    y = receiver_position[1]
-
-    x = (d**2 - r**2 + y**2) / (2 * y)
-    y = sqrt(abs(d**2 - x**2))
-
+    # Zoek positief y snijpunt van cirkels, en coresponderend x punt
+    y = -(distance0**2 - distance1**2) / 4
+    x = sqrt(distance1**2 - ((y - 1) ** 2))
     return (x, y)
 
 
@@ -117,14 +105,28 @@ def main():
 
     apdps = channel2APDP(data)
     delays = calculate_delays(apdps)
+
     locations = [
         calculate_location(delayTuple[0], delayTuple[1]) for delayTuple in delays
     ]
+    [print(locationTuple[0], locationTuple[1]) for locationTuple in locations]
     x_values, y_values = zip(*locations)
     plt.scatter(x_values, y_values)
     plt.show()
 
-    # plot_apdp_with_delay(array(apdps[0]), delays[0])
+    # zonder Nans
+    print("zonder nans")
+    filteredLocations = [
+        locationTuple for locationTuple in locations if locationTuple[0] >= 0
+    ]
+    [print(locationTuple[0], locationTuple[1]) for locationTuple in filteredLocations]
+    x_values, y_values = zip(*filteredLocations)
+    plt.plot(x_values, y_values)
+    plt.show()
+
+    # delay testing
+    # [plot_apdp_with_delay(array(apdps[i]), delays[i]) for i in range(len(apdps))]
+    # plt.show()
 
 
 main()
