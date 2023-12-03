@@ -28,7 +28,7 @@ def channel2APDP(original_data: ndarray):
 
     data_windowed = [[meas*filter for meas in arr] for arr in data]
 
-    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]#_windowed]
+    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data_windowed]
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 200, 100))
