@@ -9,22 +9,6 @@ from numpy import *
 from scipy import *
 
 
-# -- Tests --
-def plot_apdp_with_delay(apdp, delays):
-    """
-    Plots the impulse response and marks the peaks
-    """
-    delay = [int(delay / 5e-10) for delay in delays]
-    plt.figure(figsize=(8, 6))
-    plt.plot(apdp)
-    plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
-    plt.xlabel("Index")
-    plt.ylabel("Amplitude")
-    plt.title("Impulse Response with Peaks")
-    plt.yscale('log')
-    plt.legend()
-    plt.grid(True)
-
 
 # -- Bepalen reistijden van paden --
 def channel2APDP(original_data: ndarray):
@@ -42,11 +26,9 @@ def channel2APDP(original_data: ndarray):
     # plt.plot(filter)
     # plt.show()
 
-    freq_windowed = [[meas*filter for meas in arr] for arr in data]
-    # plt.plot(freq_windowed[1][1])
-    # plt.show()
+    data_windowed = [[meas*filter for meas in arr] for arr in data]
 
-    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in freq_windowed]
+    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]#_windowed]
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 200, 100))
@@ -78,8 +60,23 @@ def calculate_delays(APDPs: ndarray):
     for APDP in APDPs:
         peakIndexes, _ = sig.find_peaks(APDP)
         max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
+        print(max2peakIndexes)
         max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
         delays.append(max2Delays)
+
+    # Om te garanderen dat het rechtstreekse signaal steeds het kortste is. Zonder window is dit voor sommige waarden nodig.
+    # Na testen schijnt echter dat voor deze waarden nog grotere problemen van tel zijn (Wortel van een negatief getal),
+    # en deze extra stap dus geen verbetering geeft op het eindresultaat. (De eerstvolgende waarde op de Hoofdpiek ligt op te grote afstand.)
+    # for APDP in APDPs:
+    #     peakIndexes, _ = sig.find_peaks(APDP)
+    #     sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
+    #     i=0
+    #     while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
+    #         i+=1
+    #     max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
+    #     print(max2peakIndexes)
+    #     max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+    #     delays.append(max2Delays)
 
     return delays
 
@@ -115,6 +112,37 @@ def calculate_location(tau0: float, tau1: float):
 
 
 
+# -- Tests --
+def plot_apdp_with_delay(apdp, delays):
+    """
+    Plots the impulse response and marks the peaks
+    """
+    delay = [int(delay / 5e-10) for delay in delays]
+    plt.figure(figsize=(8, 6))
+    plt.plot(apdp)
+    plt.plot(delay, apdp[delay], "x", label="Peaks", color="red")
+    plt.xlabel("Index")
+    plt.ylabel("Amplitude")
+    plt.title("Impulse Response with Peaks")
+    plt.yscale('log')
+    plt.legend()
+    plt.grid(True)
+
+
+def mediaan_van_fout_op_lokalisatie(locations):
+    """
+    Vergelijk de gevonden coordinaten met het effectief afgelopen pad:
+        t = 0,1,...,24
+        x = 2 + (t/2)
+        y = (t²/32) - (t/2) + 6
+    """
+
+
+
+    return (0.0)
+
+
+
 def main():
     dataset_file = sio.loadmat("./Dataset_1.mat")
     data: ndarray = dataset_file["H"]
@@ -124,7 +152,11 @@ def main():
 
     locations = [calculate_location(delayTuple[0], delayTuple[1]) for delayTuple in delays]
 
-    [print(locationTuple[0], locationTuple[1]) for locationTuple in locations]
+    i = 1
+    for locationTuple in locations:
+        print(f"x{i}: {locationTuple[0]}m    y{i}: {locationTuple[1]}m")
+        i += 1
+    
     x_values, y_values = zip(*locations)
     plt.scatter(x_values, y_values)
     plt.plot(x_values, y_values)
