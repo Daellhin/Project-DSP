@@ -60,7 +60,6 @@ def calculate_delays(APDPs: ndarray):
     for APDP in APDPs:
         peakIndexes, _ = sig.find_peaks(APDP)
         max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
-        print(max2peakIndexes)
         max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
         delays.append(max2Delays)
 
@@ -136,10 +135,15 @@ def mediaan_van_fout_op_lokalisatie(locations):
         x = 2 + (t/2)
         y = (t²/32) - (t/2) + 6
     """
+    x,y = zip(*locations)
+    xfouten = []
+    yfouten = []
+    for i in range(len(locations)):
+        xfouten.append(abs(x[i]-(2+(i/2))))
+        yfouten.append(abs(y[i]-(((i**2)/32)-(i/2)+6)))
 
 
-
-    return (0.0)
+    return median(xfouten),median(yfouten)
 
 
 
@@ -156,7 +160,8 @@ def main():
     for locationTuple in locations:
         print(f"x{i}: {locationTuple[0]}m    y{i}: {locationTuple[1]}m")
         i += 1
-    
+    print('mediaanfout =',mediaan_van_fout_op_lokalisatie(locations))
+
     x_values, y_values = zip(*locations)
     plt.scatter(x_values, y_values)
     plt.plot(x_values, y_values)
@@ -308,6 +313,7 @@ def main():
     plt.show()
 
     # plot_apdp_with_delay(array(apdps[0]), delays[0])
+    # plt.show()
 
 
 main()
