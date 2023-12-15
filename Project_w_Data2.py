@@ -21,9 +21,10 @@ def channel2APDP(original_data: ndarray):
     # Data in nieuwe vorm: positions(25) x measurements(100) x freq_tonen(1000)
 
     # Venster rond zetten:
-    filter = sig.windows.gaussian(1000,26)
+    filter = sig.windows.gaussian(1000,130)
 
     # plt.plot(filter)
+    # plt.plot(data[1][1])
     # plt.show()
 
     data_windowed = [[meas*filter for meas in arr] for arr in data]
@@ -165,7 +166,7 @@ def main():
 
     x_values, y_values = zip(*locations)
     plt.scatter(x_values, y_values)
-    plt.plot(x_values, y_values)
+    plt.plot(x_values, y_values)    
     plt.xlim((0,16))
     plt.ylim((0,14))
     plt.ylim(bottom=0)
