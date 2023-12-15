@@ -128,22 +128,29 @@ def plot_apdp_with_delay(apdp, delays):
     plt.grid(True)
 
 
-def mediaan_van_fout_op_lokalisatie(locations):
+def mediaan_van_fout_op_lokalisatie(locations,known_trajectory):
     """
-    Vergelijk de gevonden coordinaten met het effectief afgelopen pad:
-        t = 0,1,...,24
-        x = 2 + (t/2)
-        y = (t²/32) - (t/2) + 6
+    Vergelijk de gevonden coordinaten met het effectief afgelopen pad.
     """
     x,y = zip(*locations)
+    xk,yk = zip(*known_trajectory)
     xfouten = []
     yfouten = []
     for i in range(len(locations)):
-        xfouten.append(abs(x[i]-(2+(i/2))))
-        yfouten.append(abs(y[i]-(((i**2)/32)-(i/2)+6)))
+        xfouten.append(abs(x[i]-xk[i]))
+        yfouten.append(abs(y[i]-yk[i]))
 
 
     return median(xfouten),median(yfouten)
+
+def calculate_theoretical_trajectory(length):
+    """
+        Bereken het theoretisch afgelopen pad:
+        t = 0,1,...,24
+        x = 2 + (t/2)
+        y = (t²/32) - (t/2) + 6
+        """
+    return [((2+(i/2)),(((i**2)/32)-(i/2)+6)) for i in range(length)]
 
 
 
@@ -160,16 +167,24 @@ def main():
     for locationTuple in locations:
         print(f"x{i}: {locationTuple[0]}m    y{i}: {locationTuple[1]}m")
         i += 1
-    print('mediaanfout =',mediaan_van_fout_op_lokalisatie(locations))
+    
+    known_locations = calculate_theoretical_trajectory(len(locations))
 
+    print('mediaanfout =',mediaan_van_fout_op_lokalisatie(locations,known_locations))
+
+    #Calculated:
+    x_values, y_values = zip(*known_locations)
+    plt.scatter(x_values, y_values)
+    plt.plot(x_values, y_values)      
+    
+    #Measured:
     x_values, y_values = zip(*locations)
     plt.scatter(x_values, y_values)
-    plt.plot(x_values, y_values)
+    plt.plot(x_values, y_values)    
     plt.xlim((0,16))
     plt.ylim((0,14))
     plt.ylim(bottom=0)
     plt.show()
-
 
 
 main()
