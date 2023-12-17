@@ -29,7 +29,7 @@ def channel2APDP(original_data: ndarray):
 
     data_windowed = [[meas*filter for meas in arr] for arr in data]
 
-    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data_windowed]
+    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]#_windowed]
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 1000, 100))
@@ -58,25 +58,25 @@ def calculate_delays(APDPs: ndarray):
     dT = 1e-10
 
     delays = list()
-    for APDP in APDPs:
-        peakIndexes, _ = sig.find_peaks(APDP)
-        max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
-        max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
-        delays.append(max2Delays)
+    # for APDP in APDPs:
+    #     peakIndexes, _ = sig.find_peaks(APDP)
+    #     max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
+    #     max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+    #     delays.append(max2Delays)
 
     # Om te garanderen dat het rechtstreekse signaal steeds het kortste is. Zonder window is dit voor sommige waarden nodig.
     # Na testen schijnt echter dat voor deze waarden nog grotere problemen van tel zijn (Wortel van een negatief getal),
     # en deze extra stap dus geen verbetering geeft op het eindresultaat. (De eerstvolgende waarde op de Hoofdpiek ligt op te grote afstand.)
-    # for APDP in APDPs:
-    #     peakIndexes, _ = sig.find_peaks(APDP)
-    #     sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
-    #     i=0
-    #     while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
-    #         i+=1
-    #     max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
-    #     print(max2peakIndexes)
-    #     max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
-    #     delays.append(max2Delays)
+    for APDP in APDPs:
+        peakIndexes, _ = sig.find_peaks(APDP)
+        sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
+        i=0
+        while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
+            i+=1
+        max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
+        # print(max2peakIndexes)
+        max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+        delays.append(max2Delays)
 
     return delays
 
@@ -174,16 +174,18 @@ def main():
 
     #Calculated:
     x_values, y_values = zip(*known_locations)
-    plt.scatter(x_values, y_values)
-    plt.plot(x_values, y_values)      
+    plt.scatter(x_values, y_values,color="red")
+    plt.plot(x_values, y_values, label="Theoretical",color="red")      
     
     #Measured:
     x_values, y_values = zip(*locations)
-    plt.scatter(x_values, y_values)
-    plt.plot(x_values, y_values)    
-    plt.xlim((0,16))
-    plt.ylim((0,14))
+    plt.scatter(x_values, y_values,color="blue")
+    plt.plot(x_values, y_values,label="Measured",color="blue")    
+    plt.xlim((0,17))
+    plt.ylim((0,15))
     plt.ylim(bottom=0)
+
+    plt.legend()
     plt.show()
 
 

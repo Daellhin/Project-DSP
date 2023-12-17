@@ -28,7 +28,7 @@ def channel2APDP(original_data: ndarray):
 
     data_windowed = [[meas*filter for meas in arr] for arr in data]
 
-    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data_windowed]
+    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]#_windowed]
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 200, 100))
@@ -174,16 +174,18 @@ def main():
 
     #Calculated:
     x_values, y_values = zip(*known_locations)
-    plt.scatter(x_values, y_values)
-    plt.plot(x_values, y_values)      
+    plt.scatter(x_values, y_values,color="red")
+    plt.plot(x_values, y_values, label="Theoretical",color="red")      
     
     #Measured:
     x_values, y_values = zip(*locations)
-    plt.scatter(x_values, y_values)
-    plt.plot(x_values, y_values)    
-    plt.xlim((0,16))
-    plt.ylim((0,14))
+    plt.scatter(x_values, y_values,color="blue")
+    plt.plot(x_values, y_values,label="Measured",color="blue")    
+    plt.xlim((0,17))
+    plt.ylim((0,15))
     plt.ylim(bottom=0)
+
+    plt.legend()
     plt.show()
 
 
