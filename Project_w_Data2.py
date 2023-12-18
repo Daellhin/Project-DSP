@@ -99,14 +99,12 @@ def calculate_location(tau0: float, tau1: float):
     r0 = tau0 * consts.speed_of_light   # Rechtstreekse afstand tot drone
     r1 = tau1 * consts.speed_of_light   # Gereflecteerde afstand tot drone
 
-    y0 = 1      # y-coordinaat basisstation
-    y1 = -1     # y-coordinaat gereflecteerde basisstation
     d = 2       # Afstand tussen Middelpunten van 2 denkbeeldige cirkels m0=(0,1) en m1=(0,-1)
 
     # Vervolgens wordt het snijpunt gezocht tussen deze 2 cirkels:
-    a=(r0**2-r1**2+d**2)/(2*d)  # Afstand van m0 tot het snijpunt van de lijn tussen de twee cirkelcentra en de loodlijn hierop die door de intersectiepunten gaat.
-    x=sqrt(r0**2-a**2)*(y0-y1)/d
-    y=y0+a*(y1-y0)/d
+
+    y=(r1**2-r0**2)/(2*d)  # Vergelijking van rechte die door de intersectiepunten gaat. Hier ook rechtstreeks y-coördinaat van gezochte punt.
+    x=sqrt(r0**2-(y-1)**2)  # We zijn steeds opzoek naar het strikt positieve snijpunt, dus uitkomst na sqrt volstaat.
 
 
     return (x, y)
