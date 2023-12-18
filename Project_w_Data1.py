@@ -1,13 +1,12 @@
 from math import *
 
 import matplotlib.pyplot as plt
+import scipy.constants as consts
 import scipy.fftpack as fftp
 import scipy.io as sio
 import scipy.signal as sig
-import scipy.constants as consts
 from numpy import *
 from scipy import *
-
 
 
 # -- Bepalen reistijden van paden --
@@ -21,14 +20,16 @@ def channel2APDP(original_data: ndarray):
     # Data in nieuwe vorm: positions(25) x measurements(100) x freq_tonen(200)
 
     # Venster rond zetten:
-    filter = sig.windows.gaussian(200,26)
+    filter = sig.windows.gaussian(200, 26)
 
     # plt.plot(filter)
     # plt.show()
 
-    data_windowed = [[meas*filter for meas in arr] for arr in data]
+    data_windowed = [[meas * filter for meas in arr] for arr in data]
 
-    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]#_windowed]
+    ifft_amplitude = [
+        [abs(fftp.ifft(meas)) for meas in arr] for arr in data
+    ]  # _windowed]
 
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
     ifft_amplitude = reshape(ifft_amplitude, (25, 200, 100))
@@ -45,7 +46,6 @@ def channel2APDP(original_data: ndarray):
     avg_power = [[mean(power_values) for power_values in pos] for pos in power]
 
     return avg_power
-
 
 
 def calculate_delays(APDPs: ndarray):
@@ -80,7 +80,6 @@ def calculate_delays(APDPs: ndarray):
     return delays
 
 
-
 # -- Locatiebepaling --
 def calculate_location(tau0: float, tau1: float):
     """
@@ -89,25 +88,27 @@ def calculate_location(tau0: float, tau1: float):
 
     Coördinaten basisstation: (xB, yB) = (0m, 1m)
     """
-    #print(tau0 < tau1, f"{tau0}<{tau1}")  --> Met Window komt de reflectie steeds na de hoofdpiek!!
+    # print(tau0 < tau1, f"{tau0}<{tau1}")  --> Met Window komt de reflectie steeds na de hoofdpiek!!
 
-    # Er worden 2 cirkels gedefinieerd. 
-    # Één cirkel tussen het basisstation en de rechtstreekse afstand tot de drone. 
+    # Er worden 2 cirkels gedefinieerd.
+    # Één cirkel tussen het basisstation en de rechtstreekse afstand tot de drone.
     # Een andere tussen het denkbeeldige basisstation gereflecteerd over de x-as, en de gereflecteerde afstand tot de drone.
- 
-    r0 = tau0 * consts.speed_of_light   # Rechtstreekse afstand tot drone
-    r1 = tau1 * consts.speed_of_light   # Gereflecteerde afstand tot drone
 
-    d = 2       # Afstand tussen Middelpunten van 2 denkbeeldige cirkels m0=(0,1) en m1=(0,-1)
+    r0 = tau0 * consts.speed_of_light  # Rechtstreekse afstand tot drone
+    r1 = tau1 * consts.speed_of_light  # Gereflecteerde afstand tot drone
+
+    d = 2  # Afstand tussen Middelpunten van 2 denkbeeldige cirkels m0=(0,1) en m1=(0,-1)
 
     # Vervolgens wordt het snijpunt gezocht tussen deze 2 cirkels:
 
-    y=(r1**2-r0**2)/(2*d)  # Vergelijking van rechte die door de intersectiepunten gaat. Hier ook rechtstreeks y-coördinaat van gezochte punt.
-    x=sqrt(r0**2-(y-1)**2)  # We zijn steeds opzoek naar het strikt positieve snijpunt, dus uitkomst na sqrt volstaat.
-
+    y = (r1**2 - r0**2) / (
+        2 * d
+    )  # Vergelijking van rechte die door de intersectiepunten gaat. Hier ook rechtstreeks y-coördinaat van gezochte punt.
+    x = sqrt(
+        r0**2 - (y - 1) ** 2
+    )  # We zijn steeds opzoek naar het strikt positieve snijpunt, dus uitkomst na sqrt volstaat.
 
     return (x, y)
-
 
 
 # -- Tests --
@@ -122,35 +123,34 @@ def plot_apdp_with_delay(apdp, delays):
     plt.xlabel("Index")
     plt.ylabel("Amplitude")
     plt.title("Impulse Response with Peaks")
-    plt.yscale('log')
+    plt.yscale("log")
     plt.legend()
     plt.grid(True)
 
 
-def mediaan_van_fout_op_lokalisatie(locations,known_trajectory):
+def mediaan_van_fout_op_lokalisatie(locations, known_trajectory):
     """
     Vergelijk de gevonden coordinaten met het effectief afgelopen pad.
     """
-    x,y = zip(*locations)
-    xk,yk = zip(*known_trajectory)
+    x, y = zip(*locations)
+    xk, yk = zip(*known_trajectory)
     xfouten = []
     yfouten = []
     for i in range(len(locations)):
-        xfouten.append(abs(x[i]-xk[i]))
-        yfouten.append(abs(y[i]-yk[i]))
+        xfouten.append(abs(x[i] - xk[i]))
+        yfouten.append(abs(y[i] - yk[i]))
 
+    return median(xfouten), median(yfouten)
 
-    return median(xfouten),median(yfouten)
 
 def calculate_theoretical_trajectory(length):
     """
-        Bereken het theoretisch afgelopen pad:
-        t = 0,1,...,24
-        x = 2 + (t/2)
-        y = (t²/32) - (t/2) + 6
-        """
-    return [((2+(i/2)),(((i**2)/32)-(i/2)+6)) for i in range(length)]
-
+    Bereken het theoretisch afgelopen pad:
+    t = 0,1,...,24
+    x = 2 + (t/2)
+    y = (t²/32) - (t/2) + 6
+    """
+    return [((2 + (i / 2)), (((i**2) / 32) - (i / 2) + 6)) for i in range(length)]
 
 
 def main():
@@ -160,28 +160,30 @@ def main():
     apdps = channel2APDP(data)
     delays = calculate_delays(apdps)
 
-    locations = [calculate_location(delayTuple[0], delayTuple[1]) for delayTuple in delays]
+    locations = [
+        calculate_location(delayTuple[0], delayTuple[1]) for delayTuple in delays
+    ]
 
     i = 1
     for locationTuple in locations:
         print(f"x{i}: {locationTuple[0]}m    y{i}: {locationTuple[1]}m")
         i += 1
-    
+
     known_locations = calculate_theoretical_trajectory(len(locations))
 
-    print('mediaanfout =',mediaan_van_fout_op_lokalisatie(locations,known_locations))
+    print("mediaanfout =", mediaan_van_fout_op_lokalisatie(locations, known_locations))
 
-    #Calculated:
+    # Calculated:
     x_values, y_values = zip(*known_locations)
-    plt.scatter(x_values, y_values,color="red")
-    plt.plot(x_values, y_values, label="Theoretical",color="red")      
-    
-    #Measured:
+    plt.scatter(x_values, y_values, color="red")
+    plt.plot(x_values, y_values, label="Theoretical", color="red")
+
+    # Measured:
     x_values, y_values = zip(*locations)
-    plt.scatter(x_values, y_values,color="blue")
-    plt.plot(x_values, y_values,label="Measured",color="blue")    
-    plt.xlim((0,17))
-    plt.ylim((0,15))
+    plt.scatter(x_values, y_values, color="blue")
+    plt.plot(x_values, y_values, label="Measured", color="blue")
+    plt.xlim((0, 17))
+    plt.ylim((0, 15))
     plt.ylim(bottom=0)
 
     plt.legend()
@@ -189,14 +191,6 @@ def main():
 
 
 main()
-
-
-
-
-
-
-
-
 
 
 '''
