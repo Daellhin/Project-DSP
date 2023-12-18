@@ -89,7 +89,7 @@ def calculate_location(tau0: float, tau1: float):
 
     Coördinaten basisstation: (xB, yB) = (0m, 1m)
     """
-    #print(tau0 < tau1, f"{tau0}<{tau1}")  --> Met Window komt de reflectie steeds na de main!!
+    #print(tau0 < tau1, f"{tau0}<{tau1}")  --> Met Window komt de reflectie steeds na de hoofdpiek!!
 
     # Er worden 2 cirkels gedefinieerd. 
     # Één cirkel tussen het basisstation en de rechtstreekse afstand tot de drone. 
