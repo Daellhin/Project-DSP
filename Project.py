@@ -154,7 +154,7 @@ def calculate_theoretical_trajectory(length):
 
 
 def analyse_dataset(dataset, use_window):
-    print(f"Dataset: '{dataset}' windowing: '{use_window}'")
+    print(f"-- Dataset: '{dataset}' (windowing: '{use_window}') --")
 
     dataset_file = sio.loadmat(dataset)
     data: ndarray = dataset_file["H"]
@@ -195,6 +195,7 @@ def analyse_dataset(dataset, use_window):
 def main():
     use_window = True
     analyse_dataset("./Dataset_1.mat", use_window)
+    print()
     analyse_dataset("./Dataset_2.mat", use_window)
 
 
