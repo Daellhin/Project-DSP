@@ -1,40 +1,40 @@
 from math import *
 
 import matplotlib.pyplot as plt
+import scipy.constants as consts
 import scipy.fftpack as fftp
 import scipy.io as sio
 import scipy.signal as sig
-import scipy.constants as consts
 from numpy import *
 from scipy import *
 
 
 # -- Bepalen reistijden van paden --
-def channel2APDP(original_data: ndarray):
+def channel2APDP(original_data: ndarray, use_window=False):
     """
     APDP: Averaged Power Delay Profile
-    Data in form of: freq_tonen(200) x positions(25) x measurements(1000)
+    Data in vorm: Dataset1(freq_tonen(200) x positions(25) x measurements(100))
     """
+    # Data in nieuwe vorm: Dataset1(positions(25) x measurements(100) x freq_tonen(200))
+    s0 = size(original_data, 0)  # 200
+    s1 = size(original_data, 1)  # 25
+    s2 = size(original_data, 2)  # 100
     data = transpose(original_data, (1, 2, 0))
-    data = reshape(data, (25, 100, 1000))
-    # Data in nieuwe vorm: positions(25) x measurements(100) x freq_tonen(1000)
+    data = reshape(data, (s1, s2, s0))
 
-    # Venster rond zetten:
-    filter = sig.windows.gaussian(1000, 130)
-
+    # Venster rond zetten
+    filter = sig.windows.gaussian(s0, 130)
     # plt.plot(filter)
-    # plt.plot(data[1][1])
     # plt.show()
 
-    data_windowed = [[meas * filter for meas in arr] for arr in data]
+    if use_window:
+        data = [[meas * filter for meas in arr] for arr in data]
 
-    ifft_amplitude = [
-        [abs(fftp.ifft(meas)) for meas in arr] for arr in data
-    ]  # _windowed]
+    ifft_amplitude = [[abs(fftp.ifft(meas)) for meas in arr] for arr in data]
 
+    # Data in nieuwe vorm: Dataset1(positions(25) x freq_tonen(200) x measurements(100))
     ifft_amplitude = transpose(ifft_amplitude, (0, 2, 1))
-    ifft_amplitude = reshape(ifft_amplitude, (25, 1000, 100))
-    # Data in nieuwe vorm: positions(25) x freq_tonen(1000) x measurements(100)
+    ifft_amplitude = reshape(ifft_amplitude, (s1, s0, s2))
 
     power = [
         [
@@ -43,7 +43,6 @@ def channel2APDP(original_data: ndarray):
         ]
         for positions in ifft_amplitude
     ]
-
     avg_power = [[mean(power_values) for power_values in pos] for pos in power]
 
     return avg_power
@@ -54,29 +53,29 @@ def calculate_delays(APDPs: ndarray):
     Returns list of Tau1 and Tau2 Pairs
     """
     # Er zijn samples om de 10 MHz. Via onderstaande logica kunnen we de tijdsafstand tussen samples bepalen.
-    # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 1e-7s/1000 = 1e-10 s
-    dT = 1e-10
+    # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 1e-7s/200 = 5e-10 s
+    dT = 1e-7 / size(APDPs,1)
 
     delays = list()
-    # for APDP in APDPs:
-    #     peakIndexes, _ = sig.find_peaks(APDP)
-    #     max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
-    #     max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
-    #     delays.append(max2Delays)
+    for APDP in APDPs:
+        peakIndexes, _ = sig.find_peaks(APDP)
+        max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
+        max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+        delays.append(max2Delays)
 
     # Om te garanderen dat het rechtstreekse signaal steeds het kortste is. Zonder window is dit voor sommige waarden nodig.
     # Na testen schijnt echter dat voor deze waarden nog grotere problemen van tel zijn (Wortel van een negatief getal),
     # en deze extra stap dus geen verbetering geeft op het eindresultaat. (De eerstvolgende waarde op de Hoofdpiek ligt op te grote afstand.)
-    for APDP in APDPs:
-        peakIndexes, _ = sig.find_peaks(APDP)
-        sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
-        i = 0
-        while sortedPeakIndexes[i + 1] < sortedPeakIndexes[i]:
-            i += 1
-        max2peakIndexes = sortedPeakIndexes[i], sortedPeakIndexes[i + 1]
-        # print(max2peakIndexes)
-        max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
-        delays.append(max2Delays)
+    # for APDP in APDPs:
+    #     peakIndexes, _ = sig.find_peaks(APDP)
+    #     sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
+    #     i=0
+    #     while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
+    #         i+=1
+    #     max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
+    #     print(max2peakIndexes)
+    #     max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+    #     delays.append(max2Delays)
 
     return delays
 
@@ -154,11 +153,13 @@ def calculate_theoretical_trajectory(length):
     return [((2 + (i / 2)), (((i**2) / 32) - (i / 2) + 6)) for i in range(length)]
 
 
-def main():
-    dataset_file = sio.loadmat("./Dataset_2.mat")
+def analyse_dataset(dataset, use_window):
+    print(f"Dataset: '{dataset}' windowing: '{use_window}'")
+
+    dataset_file = sio.loadmat(dataset)
     data: ndarray = dataset_file["H"]
 
-    apdps = channel2APDP(data)
+    apdps = channel2APDP(data, use_window)
     delays = calculate_delays(apdps)
 
     locations = [
@@ -189,6 +190,12 @@ def main():
 
     plt.legend()
     plt.show()
+
+
+def main():
+    use_window = True
+    analyse_dataset("./Dataset_1.mat", use_window)
+    analyse_dataset("./Dataset_2.mat", use_window)
 
 
 main()
