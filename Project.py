@@ -48,7 +48,7 @@ def channel2APDP(original_data: ndarray, use_window=False):
     return avg_power
 
 
-def calculate_delays(APDPs: ndarray):
+def calculate_delays(APDPs: ndarray, manual_sort):
     """
     Returns list of Tau1 and Tau2 Pairs
     """
@@ -57,25 +57,27 @@ def calculate_delays(APDPs: ndarray):
     dT = 1e-7 / size(APDPs,1)
 
     delays = list()
-    for APDP in APDPs:
-        peakIndexes, _ = sig.find_peaks(APDP)
-        max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
-        max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
-        delays.append(max2Delays)
+    if not manual_sort:
+        for APDP in APDPs:
+            peakIndexes, _ = sig.find_peaks(APDP)
+            max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
+            max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+            delays.append(max2Delays)
 
     # Om te garanderen dat het rechtstreekse signaal steeds het kortste is. Zonder window is dit voor sommige waarden nodig.
     # Na testen schijnt echter dat voor deze waarden nog grotere problemen van tel zijn (Wortel van een negatief getal),
     # en deze extra stap dus geen verbetering geeft op het eindresultaat. (De eerstvolgende waarde op de Hoofdpiek ligt op te grote afstand.)
-    # for APDP in APDPs:
-    #     peakIndexes, _ = sig.find_peaks(APDP)
-    #     sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
-    #     i=0
-    #     while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
-    #         i+=1
-    #     max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
-    #     print(max2peakIndexes)
-    #     max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
-    #     delays.append(max2Delays)
+    if manual_sort:
+        for APDP in APDPs:
+            peakIndexes, _ = sig.find_peaks(APDP)
+            sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
+            i=0
+            while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
+                i+=1
+            max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
+            print(max2peakIndexes)
+            max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
+            delays.append(max2Delays)
 
     return delays
 
@@ -153,14 +155,14 @@ def calculate_theoretical_trajectory(length):
     return [((2 + (i / 2)), (((i**2) / 32) - (i / 2) + 6)) for i in range(length)]
 
 
-def analyse_dataset(dataset, use_window):
+def analyse_dataset(dataset, use_window, manual_sort):
     print(f"-- Dataset: '{dataset}' (windowing: '{use_window}') --")
 
     dataset_file = sio.loadmat(dataset)
     data: ndarray = dataset_file["H"]
 
     apdps = channel2APDP(data, use_window)
-    delays = calculate_delays(apdps)
+    delays = calculate_delays(apdps, manual_sort)
 
     locations = [
         calculate_location(delayTuple[0], delayTuple[1]) for delayTuple in delays
@@ -194,9 +196,9 @@ def analyse_dataset(dataset, use_window):
 
 def main():
     use_window = True
-    analyse_dataset("./Dataset_1.mat", use_window)
+    analyse_dataset("./Dataset_1.mat", use_window, False)
     print()
-    analyse_dataset("./Dataset_2.mat", use_window)
+    analyse_dataset("./Dataset_2.mat", use_window, True)
 
 
 main()
