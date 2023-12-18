@@ -22,8 +22,9 @@ def channel2APDP(original_data: ndarray, use_window=False):
     data = transpose(original_data, (1, 2, 0))
     data = reshape(data, (s1, s2, s0))
 
-    # Venster rond zetten
-    filter = sig.windows.gaussian(s0, 130)
+    # Venster rond zetten(26 voor Dataset1, 130 voor Dataset2)
+    filter = sig.windows.gaussian(s0, 26 if s0 == 200 else 130)
+
     # plt.plot(filter)
     # plt.show()
 
@@ -54,13 +55,15 @@ def calculate_delays(APDPs: ndarray, manual_sort):
     """
     # Er zijn samples om de 10 MHz. Via onderstaande logica kunnen we de tijdsafstand tussen samples bepalen.
     # fS = 1/Δt  -->  T = 1/Δf  -->  Δt = T / N = 1 / (Δf*N) = 1e-7s/200 = 5e-10 s
-    dT = 1e-7 / size(APDPs,1)
+    dT = 1e-7 / size(APDPs, 1)
 
     delays = list()
     if not manual_sort:
         for APDP in APDPs:
             peakIndexes, _ = sig.find_peaks(APDP)
-            max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[:2]
+            max2peakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)[
+                :2
+            ]
             max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
             delays.append(max2Delays)
 
@@ -71,10 +74,10 @@ def calculate_delays(APDPs: ndarray, manual_sort):
         for APDP in APDPs:
             peakIndexes, _ = sig.find_peaks(APDP)
             sortedPeakIndexes = sorted(peakIndexes, key=lambda x: APDP[x], reverse=True)
-            i=0
-            while sortedPeakIndexes[i+1]<sortedPeakIndexes[i]:
-                i+=1
-            max2peakIndexes = sortedPeakIndexes[i],sortedPeakIndexes[i+1]
+            i = 0
+            while sortedPeakIndexes[i + 1] < sortedPeakIndexes[i]:
+                i += 1
+            max2peakIndexes = sortedPeakIndexes[i], sortedPeakIndexes[i + 1]
             print(max2peakIndexes)
             max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
             delays.append(max2Delays)
