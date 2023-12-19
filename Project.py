@@ -1,5 +1,4 @@
 from math import *
-
 import matplotlib.pyplot as plt
 import scipy.constants as consts
 import scipy.fftpack as fftp
