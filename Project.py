@@ -77,7 +77,6 @@ def calculate_delays(APDPs: ndarray, manual_sort):
             while sortedPeakIndexes[i + 1] < sortedPeakIndexes[i]:
                 i += 1
             max2peakIndexes = sortedPeakIndexes[i], sortedPeakIndexes[i + 1]
-            print(max2peakIndexes)
             max2Delays = [peakIndex * dT for peakIndex in max2peakIndexes]
             delays.append(max2Delays)
 
