@@ -5,11 +5,11 @@ $$ PDP(t) = \int_{-∞}^{+∞}​H(f)⋅e^{2πjωt} \;df $$
 $$ APDP(t) = \frac{1}{N} \sum_{i=1}^{N}​​PDP_i​(t) $$
 
 ## Traject
-**Dataset 1**
+**Dataset 1**  
 ![](img/PlotDataset1.png)
 - Links: zonder window, Rechts: met window
 
-**Dataset 2**
+**Dataset 2**  
 ![](img/PlotDataset2.png)
 - Links: zonder window, Rechts: met window
 
